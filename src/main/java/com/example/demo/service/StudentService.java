@@ -2,11 +2,11 @@ package com.example.demo.service;
 
 
 import java.util.List;
-import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.example.demo.exception.StudentNotFoundException;
 import com.example.demo.model.Student;
 import com.example.demo.repository.StudentRepository;
 
@@ -18,6 +18,12 @@ public class StudentService {
 
     // Create student
     public Student saveStudent(Student student) {
+    	 // Auto-generate ID: find greatest current ID and add 1
+    	if (student.getId()==null) {
+    		Long maxId=studentRepository.findAll().stream().mapToLong(Student::getId).max().orElse(0L);
+    		student.setId(maxId+1);
+    	}
+    	 // If ID is provided, use it directly.
         return studentRepository.save(student);
     }
 
@@ -27,14 +33,14 @@ public class StudentService {
     }
 
     // Read student by ID
-    public Optional<Student> getStudentById(Long id) {
-        return studentRepository.findById(id);
-    }
+    public Student getStudentById(Long id) {
+        return studentRepository.findById(id).orElseThrow(() -> new StudentNotFoundException(id));
+    }	
 
     // Update student
     public Student updateStudent(Long id, Student updatedDetails) {
         Student existingStudent = studentRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Student not found with id: " + id));
+                .orElseThrow(() -> new StudentNotFoundException(id));
         
         existingStudent.setName(updatedDetails.getName());
         existingStudent.setEmail(updatedDetails.getEmail());
@@ -49,12 +55,8 @@ public class StudentService {
 
 
     // Delete student
-    public boolean deleteStudent(Long id) {
-        Optional<Student> optionalStudent = studentRepository.findById(id);
-        if (optionalStudent.isPresent()) {
-            studentRepository.deleteById(id);
-            return true;
-        }
-        return false;
+    public Student deleteStudent(Long id) {
+    	Student st=studentRepository.findById(id).orElseThrow(()-> new StudentNotFoundException(id));
+    	return st;
     }
 }

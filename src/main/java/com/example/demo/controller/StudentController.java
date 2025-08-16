@@ -1,12 +1,13 @@
 package com.example.demo.controller;
 
 import java.util.List;
-import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import com.example.demo.exception.StudentNotFoundException;
 import com.example.demo.model.Student;
 import com.example.demo.service.StudentService;
 
@@ -32,12 +33,9 @@ public class StudentController {
     // Get student by ID
     @GetMapping("/{id}")
     public ResponseEntity<Student> getStudentById(@PathVariable Long id) {
-        Optional<Student> student = studentService.getStudentById(id);
-        if (student.isPresent()) {
-            return ResponseEntity.ok(student.get());
-        } else {
-            return ResponseEntity.notFound().build();
-        }
+        Student student = studentService.getStudentById(id);
+        return ResponseEntity.ok(student);
+        
     }
 
     // Update student by ID
@@ -53,13 +51,14 @@ public class StudentController {
 
     // Delete student by ID
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteStudent(@PathVariable Long id) {
-        boolean isDeleted = studentService.deleteStudent(id);
-        if (isDeleted) {
-            return ResponseEntity.noContent().build();
-        } else {
-            return ResponseEntity.notFound().build();
-        }
+    public ResponseEntity<?> deleteStudent(@PathVariable Long id){
+    	try {
+    		Student deleteStudent = studentService.deleteStudent(id);
+    		return ResponseEntity.ok(deleteStudent);
+    	}catch (StudentNotFoundException e) {
+    		return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+			// TODO: handle exception
+		}
     }
 }
 
